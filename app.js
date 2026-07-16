@@ -1,83 +1,193 @@
-// 1. Fungsi untuk mengambil data dari Local Storage (jika tiada, gunakan data asal)
-function dapatkanDataPelajar() {
-    const dataDisimpan = localStorage.getItem("rekod_kehadiran");
-    
-    if (dataDisimpan) {
-        return JSON.parse(dataDisimpan);
-    } else {
-        // Data asal jika guru pertama kali membuka sistem ini
-        const dataAsal = [
-            { id: 1, nama: "Ahmad Ali", hadir: 0, totalHari: 0 },
-            { id: 2, nama: "Siti Aminah", hadir: 0, totalHari: 0 },
-            { id: 3, nama: "Chong Wei", hadir: 0, totalHari: 0 },
-            { id: 4, nama: "Ramasamy", hadir: 0, totalHari: 0 }
-        ];
-        // Simpan data asal ini ke dalam Local Storage buat kali pertama
-        localStorage.setItem("rekod_kehadiran", JSON.stringify(dataAsal));
-        return dataAsal;
+// Konfigurasi Asas Data Struktur E-Kehadiran
+function mulakanDatabase() {
+    let storage = localStorage.getItem("e_kehadiran_db");
+    if (!storage) {
+        const strukturAsal = {
+            senaraiKelas: ["5 Sains", "5 Sastera"],
+            pelajar: [
+                { id: 1, nama: "Ahmad Ali", kelas: "5 Sains", rekod: {} },
+                { id: 2, nama: "Siti Aminah", kelas: "5 Sains", rekod: {} },
+                { id: 3, nama: "Chong Wei", kelas: "5 Sastera", rekod: {} }
+            ]
+        };
+        localStorage.setItem("e_kehadiran_db", JSON.stringify(strukturAsal));
+        return strukturAsal;
     }
+    return JSON.parse(storage);
 }
 
-// 2. Ambil data pelajar yang terkini
-let dataPelajar = dapatkanDataPelajar();
+let db = mulakanDatabase();
 
-// 3. Formula Pengiraan Peratusan Kehadiran
-function kiraPeratus(hariHadir, totalHari) {
-    if (totalHari === 0) return 0;
-    let peratus = (hariHadir / totalHari) * 100;
-    return peratus.toFixed(2);
+// Menjana Pilihan 20 Minggu Semester secara Automatik
+function janaPilihanMinggu() {
+    const pilihMinggu = document.getElementById("pilihMinggu");
+    const laporanMinggu = document.getElementById("laporanMinggu");
+    
+    let htmlMinggu = "";
+    for (let i = 1; i <= 20; i++) {
+        htmlMinggu += `<option value="Minggu-${i}">Minggu ${i}</option>`;
+    }
+    
+    if (pilihMinggu) pilihMinggu.innerHTML = htmlMinggu;
+    if (laporanMinggu) laporanMinggu.innerHTML += htmlMinggu;
 }
 
-// 4. Fungsi untuk menyimpan tanda kehadiran hari ini (Dipanggil apabila butang "Simpan" ditekan)
-function simpanKehadiran() {
-    const tarikh = document.getElementById("tarikhKehadiran").value;
-    if (!tarikh) {
-        alert("Sila pilih tarikh terlebih dahulu!");
+// Kemas kini Pilihan Dropdown Kelas di index dan laporan
+function janaPilihanKelas() {
+    const pilihKelas = document.getElementById("pilihKelas");
+    const laporanKelas = document.getElementById("laporanKelas");
+    
+    let htmlKelas = db.senaraiKelas.map(k => `<option value="${k}">${k}</option>`).join("");
+    
+    if (pilihKelas) pilihKelas.innerHTML = htmlKelas;
+    if (laporanKelas) laporanKelas.innerHTML = htmlKelas;
+}
+
+// Tambah Kelas Kustom Baru
+function tambahKelas() {
+    const namaInput = document.getElementById("namaKelasBaru");
+    let nama = namaInput.value.trim();
+    if (!nama) return alert("Sila masukkan nama kelas!");
+    if (db.senaraiKelas.includes(nama)) return alert("Kelas ini sudah wujud!");
+
+    db.senaraiKelas.push(nama);
+    localStorage.setItem("e_kehadiran_db", JSON.stringify(db));
+    namaInput.value = "";
+    janaPilihanKelas();
+    alert(`Kelas ${nama} berjaya didaftarkan!`);
+}
+
+// Tambah Pelajar Baru ke dalam kelas yang dipilih semasa
+function tambahPelajar() {
+    const namaInput = document.getElementById("namaPelajarBaru");
+    const kelasTerpilih = document.getElementById("pilihKelas").value;
+    let nama = namaInput.value.trim();
+    
+    if (!nama) return alert("Sila masukkan nama pelajar!");
+    
+    let idBaru = db.pelajar.length > 0 ? db.pelajar[db.pelajar.length - 1].id + 1 : 1;
+    db.pelajar.push({ id: idBaru, nama: nama, kelas: kelasTerpilih, rekod: {} });
+    
+    localStorage.setItem("e_kehadiran_db", JSON.stringify(db));
+    namaInput.value = "";
+    tukarKonfigurasiSesi();
+    alert(`Pelajar ${nama} dimasukkan ke kelas ${kelasTerpilih}!`);
+}
+
+// Paparkan senarai nama pelajar berdasarkan kelas yang dipilih guru
+function tukarKonfigurasiSesi() {
+    const kelasTerpilih = document.getElementById("pilihKelas").value;
+    const kontenaPelajar = document.getElementById("senaraiPelajar");
+    if (!kontenaPelajar) return;
+
+    let pelajarKelas = db.pelajar.filter(p => p.kelas === kelasTerpilih);
+    kontenaPelajar.innerHTML = "";
+
+    if (pelajarKelas.length === 0) {
+        kontenaPelajar.innerHTML = `<p class="text-center text-muted py-3">Tiada pelajar lagi dalam kelas ini.</p>`;
         return;
     }
 
-    // Kemas kini data kehadiran pelajar berdasarkan tandaan guru
-    dataPelajar.forEach(pelajar => {
-        // Cari pilihan radio (Hadir atau Tidak Hadir) bagi setiap pelajar
-        const radioHadir = document.getElementById(`hadir-${pelajar.id}`);
-        
-        if (radioHadir) {
-            pelajar.totalHari += 1; // Tambah total hari persekolahan sebanyak 1
-            if (radioHadir.checked) {
-                pelajar.hadir += 1; // Jika ditanda 'Hadir', tambah hari hadir sebanyak 1
-            }
-        }
-    });
+    pelajarKelas.forEach((pelajar, index) => {
+        kontenaPelajar.innerHTML += `
+            <div class="d-flex justify-content-between align-items-center p-3 student-row">
+                <span class="fw-semibold">${index + 1}. ${pelajar.nama}</span>
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="status-${pelajar.id}" id="hadir-${pelajar.id}" value="Hadir" checked>
+                    <label class="btn btn-outline-success btn-sm px-3" for="hadir-${pelajar.id}"><i class="bi bi-check-circle"></i> Hadir</label>
 
-    // Simpan data terbaharu ini ke dalam Local Storage (Kekal selamanya di browser ini)
-    localStorage.setItem("rekod_kehadiran", JSON.stringify(dataPelajar));
-    
-    alert("Rekod kehadiran hari ini telah berjaya disimpan!");
+                    <input type="radio" class="btn-check" name="status-${pelajar.id}" id="tidak-${pelajar.id}" value="Tidak Hadir">
+                    <label class="btn btn-outline-danger btn-sm px-3" for="tidak-1${pelajar.id}"><i class="bi bi-x-circle"></i> Ponteng</label>
+                </div>
+            </div>
+        `;
+    });
 }
 
-// 5. Fungsi untuk memaparkan data di halaman Laporan (laporan.html)
+// Simpan data tandaan harian mengiringi struktur minggu
+function simpanKehadiran() {
+    const tarikh = document.getElementById("tarikhKehadiran").value;
+    const minggu = document.getElementById("pilihMinggu").value;
+    const kelasTerpilih = document.getElementById("pilihKelas").value;
+    
+    if (!tarikh) return alert("Sila tetapkan tarikh!");
+
+    let pelajarKelas = db.pelajar.filter(p => p.kelas === kelasTerpilih);
+
+    pelajarKelas.forEach(pelajar => {
+        const isHadir = document.getElementById(`hadir-${pelajar.id}`).checked;
+        if (!pelajar.rekod[minggu]) {
+            pelajar.rekod[minggu] = [];
+        }
+        
+        // Elakkan duplikasi data pada tarikh yang sama
+        pelajar.rekod[minggu] = pelajar.rekod[minggu].filter(r => r.tarikh !== tarikh);
+        pelajar.rekod[minggu].push({ tarikh: tarikh, status: isHadir ? "Hadir" : "Tidak Hadir" });
+    });
+
+    localStorage.setItem("e_kehadiran_db", JSON.stringify(db));
+    alert("Kehadiran hari ini berjaya dikunci!");
+}
+
+// Memproses Analisis Kehadiran & Menyalakan Zon Amaran Merah (< 80%)
 function paparLaporan() {
     const jadual = document.getElementById("jadualLaporan");
     if (!jadual) return;
 
-    jadual.innerHTML = ""; // Bersihkan jadual asal
+    const kelasTerpilih = document.getElementById("laporanKelas").value;
+    const mingguTerpilih = document.getElementById("laporanMinggu").value;
 
-    dataPelajar.forEach(pelajar => {
-        let peratus = kiraPeratus(pelajar.hadir, pellets = pelajar.totalHari);
-        let warnaTeks = peratus >= 90 ? "text-success" : "text-danger";
+    let pelajarKelas = db.pelajar.filter(p => p.kelas === kelasTerpilih);
+    jadual.innerHTML = "";
+
+    pelajarKelas.forEach(pelajar => {
+        let totalHari = 0;
+        let hariHadir = 0;
+
+        if (mingguTerpilih === "semua") {
+            // Kira keseluruhan semester
+            Object.keys(pelajar.rekod).forEach(mgu => {
+                pelajar.rekod[mgu].forEach(sesi => {
+                    totalHari++;
+                    if (sesi.status === "Hadir") hariHadir++;
+                });
+            });
+        } else {
+            // Tapis satu minggu spesifik sahaja
+            if (pelajar.rekod[mingguTerpilih]) {
+                pelajar.rekod[mingguTerpilih].forEach(sesi => {
+                    totalHari++;
+                    if (sesi.status === "Hadir") hariHadir++;
+                });
+            }
+        }
+
+        let peratus = totalHari === 0 ? 0 : ((hariHadir / totalHari) * 100);
+        let statusKelasCSS = (peratus < 80 && totalHari > 0) ? "danger-alert" : "";
+        let peratusTeksCSS = peratus < 80 ? "text-danger fw-bold" : "text-success fw-bold";
 
         jadual.innerHTML += `
-            <tr>
+            <tr class="${statusKelasCSS}">
                 <td>${pelajar.nama}</td>
-                <td>${pelajar.hadir}</td>
-                <td>${pelajar.totalHari}</td>
-                <td><strong class="${warnaTeks}">${peratus}%</strong></td>
+                <td>${hariHadir}</td>
+                <td>${totalHari}</td>
+                <td><span class="${peratusTeksCSS}">${peratus.toFixed(2)}%</span></td>
             </tr>
         `;
     });
 }
 
-// Jalankan fungsi papar laporan secara automatik jika berada di halaman laporan.html
+function padamSemuaDataKelas() {
+    if(confirm("Adakah anda pasti mahu memadam semua rekod dan data pelajar?")) {
+        localStorage.removeItem("e_kehadiran_db");
+        location.reload();
+    }
+}
+
+// Panggilan Permulaan Aplikasi apabila Halaman Selesai Dimuat
 document.addEventListener("DOMContentLoaded", () => {
+    janaPilihanMinggu();
+    janaPilihanKelas();
+    tukarKonfigurasiSesi();
     paparLaporan();
 });
