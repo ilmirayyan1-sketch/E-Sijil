@@ -3,134 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Penjana Sijil Pukal Sekolah</title>
+    <title>E-Sijil Pukal Kreatif</title>
+    <!-- Bootstrap 5 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <!-- Panggilan Library html2pdf untuk tukar HTML ke PDF secara setempat -->
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Montserrat:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+    <!-- html2pdf Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { background: #f4f6f9; color: #333; font-family: 'Segoe UI', system-ui, sans-serif; }
-        .card-custom { background: white; border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        :root {
+            --primary-navy: #0f172a;
+            --border-navy: #1a365d;
+            --primary-emerald: #064e3b;
+            --border-emerald: #065f46;
+            --primary-maroon: #4c0519;
+            --border-maroon: #881337;
+            --accent-gold: #c5a880;
+        }
         
-        /* Gaya Reka Bentuk Sijil yang akan dicetak */
+        body { 
+            background-color: #f1f5f9; 
+            color: #334155; 
+            font-family: 'Montserrat', sans-serif; 
+        }
+        
+        .navbar-custom {
+            background-color: #0f172a;
+            border-bottom: 3px solid var(--accent-gold);
+        }
+
+        .card-custom { 
+            background: #ffffff; 
+            border: none; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05); 
+        }
+
+        .form-control, .form-select {
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 10px 14px;
+        }
+
+        /* ---------------------------------------------------- */
+        /* STYLES TEMPLATE SIJIL (PILIHAN DUA WARNA UTAMA) */
+        /* ---------------------------------------------------- */
         .sijil-container {
             width: 800px;
             height: 565px;
-            padding: 30px;
-            background: white;
+            padding: 35px;
+            background: #ffffff;
             position: relative;
             box-sizing: border-box;
             margin: 0 auto;
-            border: 15px solid #1a365d;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+            user-select: none;
         }
+
+        /* Tema 1: Classic Navy (Default) */
+        .theme-navy {
+            border: 20px solid var(--border-navy);
+        }
+        .theme-navy .sijil-inner {
+            border: 3px double var(--accent-gold);
+            background-color: #fffdf9;
+        }
+
+        /* Tema 2: Emerald Green */
+        .theme-emerald {
+            border: 20px solid var(--border-emerald);
+        }
+        .theme-emerald .sijil-inner {
+            border: 3px double var(--accent-gold);
+            background-color: #f6fcf9;
+        }
+
+        /* Tema 3: Royal Maroon */
+        .theme-maroon {
+            border: 20px solid var(--border-maroon);
+        }
+        .theme-maroon .sijil-inner {
+            border: 3px double var(--accent-gold);
+            background-color: #fdfafb;
+        }
+
         .sijil-inner {
-            border: 4px double #c5a880;
             height: 100%;
             width: 100%;
-            padding: 25px;
-            text-align: center;
-            background-color: #fdfbf7;
+            padding: 20px;
             position: relative;
+            box-sizing: border-box;
         }
-        .sijil-logo { font-size: 40px; color: #1a365d; margin-bottom: 5px; }
-        .sijil-tajuk { font-family: 'Georgia', serif; font-size: 28px; color: #1a365d; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
-        .sijil-sub { font-size: 14px; text-transform: uppercase; letter-spacing: 3px; color: #c5a880; font-weight: bold; margin-bottom: 15px; }
-        .sijil-penerima { font-family: 'Georgia', serif; font-size: 24px; color: #222; border-bottom: 2px solid #c5a880; display: inline-block; padding: 0 30px; margin: 15px 0; font-weight: bold; font-style: italic; }
-        .sijil-ulasan { font-size: 14px; line-height: 1.6; color: #555; max-width: 550px; margin: 0 auto 20px auto; }
-        .sijil-tandatangan { margin-top: 35px; }
-        .sijil-nama-guru { font-weight: bold; border-top: 1px solid #aaa; display: inline-block; padding-top: 5px; width: 200px; font-size: 13px; color: #333; }
-        .sijil-jawatan { font-size: 11px; color: #777; text-transform: uppercase; }
+
+        /* Elemen Draggable (Boleh diheret) */
+        .draggable-text {
+            position: absolute;
+            cursor: move;
+            padding: 4px 8px;
+            border: 1px dashed transparent;
+            transition: border-color 0.2s;
+        }
+        .draggable-text:hover {
+            border-color: var(--accent-gold);
+            background-color: rgba(197, 168, 128, 0.08);
+        }
+
+        /* Reka Letak Elemen Default */
+        #dragLogoArea { top: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; justify-content: center; align-items: center; }
+        #dragJenis { top: 110px; left: 50%; transform: translateX(-50%); width: 80%; text-align: center; }
+        #dragSub { top: 165px; left: 50%; transform: translateX(-50%); width: 80%; text-align: center; }
+        #dragNama { top: 200px; left: 50%; transform: translateX(-50%); width: 90%; text-align: center; }
+        #dragUlasan { top: 275px; left: 50%; transform: translateX(-50%); width: 80%; text-align: center; }
+        #dragTandatangan { bottom: 40px; left: 50%; transform: translateX(-50%); width: 60%; text-align: center; }
+
+        /* Font Styling */
+        .sijil-tajuk { font-family: 'Cinzel', serif; font-size: 30px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        .theme-navy .sijil-tajuk { color: var(--primary-navy); }
+        .theme-emerald .sijil-tajuk { color: var(--primary-emerald); }
+        .theme-maroon .sijil-tajuk { color: var(--primary-maroon); }
+
+        .sijil-sub { font-size: 12px; text-transform: uppercase; letter-spacing: 3px; color: var(--accent-gold); font-weight: 700; }
+        .sijil-penerima { font-family: 'Playfair Display', serif; font-size: 26px; color: #1e293b; border-bottom: 2px solid var(--accent-gold); display: inline-block; padding-bottom: 3px; font-weight: 700; font-style: italic; }
+        .sijil-ulasan { font-size: 13px; line-height: 1.6; color: #475569; }
+        .sijil-nama-guru { font-weight: 700; border-top: 1.5px solid #94a3b8; display: inline-block; padding-top: 5px; width: 220px; font-size: 13px; color: #1e293b; text-transform: uppercase; }
+        .sijil-jawatan { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Gaya Pengurusan Logo */
+        .logo-img {
+            height: 55px;
+            object-fit: contain;
+            user-select: none;
+            pointer-events: none; /* Supaya klik-drag tidak terganggu */
+        }
         
-        /* Sembunyikan kawasan penjanaan dari skrin utama */
         #temp-output-container {
             position: absolute;
             left: -9999px;
             top: -9999px;
         }
+        .preview-scroll-wrapper {
+            overflow-x: auto;
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Bar Navigasi Atas -->
-    <nav class="navbar navbar-dark bg-dark shadow-sm">
+    <nav class="navbar navbar-dark navbar-custom py-3 shadow-sm">
         <div class="container">
-            <span class="navbar-brand mb-0 h1">
-                <i class="bi bi-award-fill text-warning me-2"></i> Penjana Sijil Pukal Pintar (Offline-First)
+            <span class="navbar-brand mb-0 h1 fw-bold">
+                <i class="bi bi-palette-fill text-warning me-2"></i> E-SIJIL PUKAL KREATIF (Pro Editor)
             </span>
         </div>
     </nav>
 
-    <div class="container py-5">
+    <div class="container-fluid px-4 py-4">
         <div class="row g-4">
             
-            <!-- Bahagian Borang Input Guru -->
-            <div class="col-lg-5">
-                <div class="card card-custom p-4">
-                    <h4 class="mb-4 text-primary"><i class="bi bi-sliders"></i> Tetapan Sijil</h4>
+            <!-- Bahagian Borang Panel Kawalan -->
+            <div class="col-xl-4 col-lg-5">
+                <div class="card card-custom p-4 shadow-sm">
+                    <h5 class="mb-3 fw-bold text-dark"><i class="bi bi-brush text-primary"></i> 1. Reka Bentuk & Tema</h5>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Jenis Sijil</label>
-                        <select id="inputJenis" class="form-select" onchange="kemaskiniPratinjau()">
-                            <option value="Sijil Penghargaan">Sijil Penghargaan</option>
-                            <option value="Sijil Penyertaan">Sijil Penyertaan</option>
-                            <option value="Sijil Pencapaian Cemerlang">Sijil Pencapaian Cemerlang</option>
+                        <label class="form-label fw-semibold text-secondary">Pilih Template Sijil</label>
+                        <select id="selectTheme" class="form-select" onchange="tukarTemaSijil()">
+                            <option value="theme-navy">Classic Navy (Sangat Formal)</option>
+                            <option value="theme-emerald">Emerald Green (Korporat / Akademik)</option>
+                            <option value="theme-maroon">Royal Maroon (Anugerah Khas)</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Nama Acara / Program</label>
+                        <label class="form-label fw-semibold text-secondary">Muat Naik Logo / Lencana (Boleh Banyak)</label>
+                        <input type="file" id="inputLogos" class="form-control" accept="image/*" multiple onchange="prosesMuatNaikLogo()">
+                        <div class="form-text text-muted">Anda boleh muat naik beberapa lencana sekali gus (Logo KPM, Lencana Sekolah, dll).</div>
+                    </div>
+
+                    <hr class="my-3">
+                    <h5 class="mb-3 fw-bold text-dark"><i class="bi bi-pencil-square text-success"></i> 2. Pengisian Kandungan</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Jenis / Tajuk Sijil</label>
+                        <select id="inputJenis" class="form-select mb-2" onchange="kemaskiniPilihanJenis()">
+                            <option value="Sijil Penghargaan">Sijil Penghargaan</option>
+                            <option value="Sijil Penyertaan">Sijil Penyertaan</option>
+                            <option value="Sijil Pencapaian Cemerlang">Sijil Pencapaian Cemerlang</option>
+                            <option value="KUSTOM">Kustom (Tulis Sendiri)...</option>
+                        </select>
+                        <input type="text" id="inputJenisKustom" class="form-control d-none" placeholder="Masukkan nama sijil kustom..." oninput="kemaskiniPratinjau()">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary">Nama Acara / Program</label>
                         <input type="text" id="inputAcara" class="form-control" value="Program Peningkatan Prestasi Akademik 2026" oninput="kemaskiniPratinjau()">
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Nama Pengirim / Pengetua / Guru</label>
+                        <label class="form-label fw-semibold text-secondary">Nama Pengirim / Guru</label>
                         <input type="text" id="inputGuru" class="form-control" value="Puan Aminah Binti Ahmad" oninput="kemaskiniPratinjau()">
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Jawatan Pengirim</label>
+                        <label class="form-label fw-semibold text-secondary">Jawatan Pengirim</label>
                         <input type="text" id="inputJawatan" class="form-control" value="Pengetua Cemerlang" oninput="kemaskiniPratinjau()">
                     </div>
 
-                    <hr>
-
+                    <hr class="my-3">
+                    <h5 class="mb-3 fw-bold text-danger"><i class="bi bi-people-fill"></i> 3. Senarai Penerima</h5>
+                    
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-danger"><i class="bi bi-people-fill"></i> Senarai Nama Murid (Satu Nama Setiap Baris)</label>
-                        <textarea id="inputNamaMurid" class="form-control" rows="6" placeholder="Masukkan senarai nama pelajar di sini...&#10;Ahmad Daniel Bin Rosli&#10;Siti Sarah Binti Bakri&#10;Chong Wei Meng"></textarea>
-                        <div class="form-text">Setiap baris nama akan menghasilkan 1 helaian sijil PDF berasingan.</div>
+                        <textarea id="inputNamaMurid" class="form-control" rows="4" placeholder="Ahmad Daniel Bin Rosli&#10;Siti Sarah Binti Bakri&#10;Chong Wei Meng"></textarea>
+                        <div class="form-text">Setiap baris nama akan menghasilkan sehelai sijil berasingan.</div>
                     </div>
 
-                    <button class="btn btn-primary btn-lg w-100 shadow" onclick="janaSijilPukal()">
-                        <i class="bi bi-file-earmark-pdf-fill"></i> Jana & Muat Turun PDF Pukal
+                    <button class="btn btn-primary btn-lg w-100 py-3 fw-bold" onclick="janaSijilPukal()">
+                        <i class="bi bi-file-earmark-pdf-fill me-2"></i> Jana PDF sahaja
                     </button>
                 </div>
             </div>
 
-            <!-- Bahagian Pratinjau Reka Bentuk (Live Preview) -->
-            <div class="col-lg-7">
-                <div class="sticky-top" style="top: 20px;">
-                    <h4 class="mb-3"><i class="bi bi-eye"></i> Pratinjau Sijil (Live Preview)</h4>
+            <!-- Bahagian Kanvas Penyuntingan (Live Drag & Drop Preview) -->
+            <div class="col-xl-8 col-lg-7">
+                <div class="card card-custom p-4 text-center">
+                    <h5 class="mb-2 fw-bold text-dark text-start d-flex align-items-center">
+                        <i class="bi bi-hand-index-thumb-fill text-warning me-2"></i> Kanvas Editor Pintar
+                    </h5>
+                    <p class="text-muted text-start small mb-3">💡 <strong>Tip Editor:</strong> Anda boleh heret (drag) mana-mana teks atau kumpulan logo di bawah ke mana-mana posisi yang anda mahukan di dalam kawasan sijil sebelum menjana PDF!</p>
                     
-                    <!-- Sijil Preview Visual -->
-                    <div class="card card-custom p-3 d-flex justify-content-center align-items-center bg-secondary-subtle" style="overflow-x: auto;">
-                        <div class="sijil-container" id="sijilPreview">
+                    <div class="preview-scroll-wrapper bg-secondary-subtle rounded-3 p-3">
+                        <!-- Sijil Canvas -->
+                        <div class="sijil-container theme-navy" id="sijilPreview">
                             <div class="sijil-inner">
-                                <div class="sijil-logo">
-                                    <i class="bi bi-bookmark-star-fill"></i>
+                                
+                                <!-- Kumpulan Logo yang boleh diheret -->
+                                <div class="draggable-text" id="dragLogoArea">
+                                    <span>🏆</span> <!-- Default logo jika belum muat naik apa-apa -->
                                 </div>
-                                <div class="sijil-tajuk" id="previewJenis">Sijil Penghargaan</div>
-                                <div class="sijil-sub">Dengan ini dianugerahkan kepada</div>
-                                
-                                <div class="sijil-penerima" id="previewNama">NAMA PELAJAR DI SINI</div>
-                                
-                                <div class="sijil-ulasan">
-                                    di atas sumbangan, komitmen dan kecemerlangan yang telah ditunjukkan sepanjang menyertai <strong id="previewAcara">Program Peningkatan Prestasi Akademik 2026</strong>. Terima kasih atas usaha murni yang diberikan.
+
+                                <!-- Teks Jenis Sijil -->
+                                <div class="draggable-text" id="dragJenis">
+                                    <div class="sijil-tajuk" id="previewJenis">Sijil Penghargaan</div>
                                 </div>
-                                
-                                <div class="sijil-tandatangan">
+
+                                <!-- Teks Subtitle -->
+                                <div class="draggable-text" id="dragSub">
+                                    <div class="sijil-sub">Dengan ini dianugerahkan kepada</div>
+                                </div>
+
+                                <!-- Teks Nama Pelajar -->
+                                <div class="draggable-text" id="dragNama">
+                                    <div class="sijil-penerima" id="previewNama">NAMA PELAJAR DI SINI</div>
+                                </div>
+
+                                <!-- Teks Penerangan / Ulasan -->
+                                <div class="draggable-text" id="dragUlasan">
+                                    <div class="sijil-ulasan">
+                                        di atas sumbangan, komitmen dan kecemerlangan yang telah ditunjukkan sepanjang menyertai <strong id="previewAcara">Program Peningkatan Prestasi Akademik 2026</strong>. Terima kasih atas usaha murni yang diberikan.
+                                    </div>
+                                </div>
+
+                                <!-- Teks Ruangan Tandatangan -->
+                                <div class="draggable-text" id="dragTandatangan">
                                     <div class="sijil-nama-guru" id="previewGuru">Puan Aminah Binti Ahmad</div>
                                     <div class="sijil-jawatan" id="previewJawatan">Pengetua Cemerlang</div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -140,7 +282,7 @@
         </div>
     </div>
 
-    <!-- Kontena tersembunyi untuk proses rendering PDF secara pukal -->
+    <!-- Proses rendering PDF tersembunyi -->
     <div id="temp-output-container"></div>
 
     <script src="app.js"></script>
