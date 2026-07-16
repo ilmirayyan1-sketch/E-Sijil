@@ -3,98 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Kehadiran - Menu Guru</title>
+    <title>Penjana Sijil Pukal Sekolah</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Panggilan Library html2pdf untuk tukar HTML ke PDF secara setempat -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { background: linear-gradient(135deg, #121212 0%, #1a1a2e 100%); color: #e0e0e0; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; }
-        .card-custom { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; color: #fff; }
-        .form-control, .form-select { background-color: #222; border: 1px solid #444; color: #fff; }
-        .form-control:focus, .form-select:focus { background-color: #2a2a2a; border-color: #0d6efd; color: #fff; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
-        .student-row { background: rgba(255, 255, 255, 0.02); border-radius: 8px; transition: all 0.3s ease; }
-        .student-row:hover { background: rgba(255, 255, 255, 0.07); }
+        body { background: #f4f6f9; color: #333; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .card-custom { background: white; border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        /* Gaya Reka Bentuk Sijil yang akan dicetak */
+        .sijil-container {
+            width: 800px;
+            height: 565px;
+            padding: 30px;
+            background: white;
+            position: relative;
+            box-sizing: border-box;
+            margin: 0 auto;
+            border: 15px solid #1a365d;
+        }
+        .sijil-inner {
+            border: 4px double #c5a880;
+            height: 100%;
+            width: 100%;
+            padding: 25px;
+            text-align: center;
+            background-color: #fdfbf7;
+            position: relative;
+        }
+        .sijil-logo { font-size: 40px; color: #1a365d; margin-bottom: 5px; }
+        .sijil-tajuk { font-family: 'Georgia', serif; font-size: 28px; color: #1a365d; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
+        .sijil-sub { font-size: 14px; text-transform: uppercase; letter-spacing: 3px; color: #c5a880; font-weight: bold; margin-bottom: 15px; }
+        .sijil-penerima { font-family: 'Georgia', serif; font-size: 24px; color: #222; border-bottom: 2px solid #c5a880; display: inline-block; padding: 0 30px; margin: 15px 0; font-weight: bold; font-style: italic; }
+        .sijil-ulasan { font-size: 14px; line-height: 1.6; color: #555; max-width: 550px; margin: 0 auto 20px auto; }
+        .sijil-tandatangan { margin-top: 35px; }
+        .sijil-nama-guru { font-weight: bold; border-top: 1px solid #aaa; display: inline-block; padding-top: 5px; width: 200px; font-size: 13px; color: #333; }
+        .sijil-jawatan { font-size: 11px; color: #777; text-transform: uppercase; }
+        
+        /* Sembunyikan kawasan penjanaan dari skrin utama */
+        #temp-output-container {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+        }
     </style>
 </head>
-<!-- AUTOMATIK MEMANGGIL DATABASE SEBAIK SAHAJA HALAMAN DIBUKA -->
-<body onload="mulakanDatabase()">
+<body>
+
+    <!-- Bar Navigasi Atas -->
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-award-fill text-warning me-2"></i> Penjana Sijil Pukal Pintar (Offline-First)
+            </span>
+        </div>
+    </nav>
 
     <div class="container py-5">
-        <div class="text-center mb-5">
-            <h1 class="fw-bold text-transparent bg-clip-text bg-gradient"><i class="bi bi-shield-check text-primary"></i> E-Kehadiran Inovasi</h1>
-            <p class="text-muted">Pengurusan Kehadiran Pintar & Automatik (Cloud Database)</p>
-        </div>
-        
         <div class="row g-4">
-            <!-- Bahagian Pengurusan Kustom Kelas & Pelajar -->
-            <div class="col-lg-4">
-                <div class="card-custom p-4 mb-4 shadow">
-                    <h4 class="mb-3 text-primary"><i class="bi bi-plus-circle-fill"></i> Pengurusan Kelas</h4>
-                    <div class="mb-3">
-                        <label class="form-label">Tambah Kelas Baru</label>
-                        <div class="input-group">
-                            <input type="text" id="namaKelasBaru" class="form-control" placeholder="Contoh: 5 Wawasan">
-                            <button class="btn btn-primary" onclick="tambahKelas()"><i class="bi bi-plus"></i></button>
-                        </div>
-                    </div>
-                    <hr class="border-secondary">
-                    <h4 class="mb-3 text-success"><i class="bi bi-person-plus-fill"></i> Tambah Pelajar</h4>
-                    <div class="mb-3">
-                        <label class="form-label">Nama Pelajar</label>
-                        <input type="text" id="namaPelajarBaru" class="form-control" placeholder="Nama Penuh Pelajar">
-                    </div>
-                    <button class="btn btn-success w-100" onclick="tambahPelajar()">Masukkan Pelajar</button>
-                </div>
-            </div>
-
-            <!-- Bahagian Penandaan Kehadiran -->
-            <div class="col-lg-8">
-                <div class="card-custom p-4 shadow mb-4">
-                    <h4 class="mb-3"><i class="bi bi-calendar-check"></i> Tetapan Sesi Kontrol</h4>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Pilih Minggu</label>
-                            <select id="pilihMinggu" class="form-select" onchange="tukarKonfigurasiSesi()">
-                                <!-- Dijana secara dinamik oleh JS -->
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Pilih Kelas</label>
-                            <select id="pilihKelas" class="form-select" onchange="tukarKonfigurasiSesi()">
-                                <!-- Dijana secara dinamik -->
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tarikh</label>
-                            <input type="date" id="tarikhKehadiran" class="form-control">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-custom p-4 shadow">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4><i class="bi bi-people"></i> Senarai Pelajar</h4>
-                        <button class="btn btn-sm btn-outline-danger" onclick="padamSemuaData()"><i class="bi bi-trash"></i> Reset Database</button>
-                    </div>
-                    <hr class="border-secondary">
-                    <div id="senaraiPelajar" class="d-flex flex-column gap-2">
-                        <!-- Data dimasukkan oleh JS -->
-                    </div>
+            
+            <!-- Bahagian Borang Input Guru -->
+            <div class="col-lg-5">
+                <div class="card card-custom p-4">
+                    <h4 class="mb-4 text-primary"><i class="bi bi-sliders"></i> Tetapan Sijil</h4>
                     
-                    <button class="btn btn-primary btn-lg w-100 mt-4 shadow" onclick="simpanKehadiran()"><i class="bi bi-save"></i> Simpan Rekod Hari Ini</button>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Jenis Sijil</label>
+                        <select id="inputJenis" class="form-select" onchange="kemaskiniPratinjau()">
+                            <option value="Sijil Penghargaan">Sijil Penghargaan</option>
+                            <option value="Sijil Penyertaan">Sijil Penyertaan</option>
+                            <option value="Sijil Pencapaian Cemerlang">Sijil Pencapaian Cemerlang</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nama Acara / Program</label>
+                        <input type="text" id="inputAcara" class="form-control" value="Program Peningkatan Prestasi Akademik 2026" oninput="kemaskiniPratinjau()">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nama Pengirim / Pengetua / Guru</label>
+                        <input type="text" id="inputGuru" class="form-control" value="Puan Aminah Binti Ahmad" oninput="kemaskiniPratinjau()">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Jawatan Pengirim</label>
+                        <input type="text" id="inputJawatan" class="form-control" value="Pengetua Cemerlang" oninput="kemaskiniPratinjau()">
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-danger"><i class="bi bi-people-fill"></i> Senarai Nama Murid (Satu Nama Setiap Baris)</label>
+                        <textarea id="inputNamaMurid" class="form-control" rows="6" placeholder="Masukkan senarai nama pelajar di sini...&#10;Ahmad Daniel Bin Rosli&#10;Siti Sarah Binti Bakri&#10;Chong Wei Meng"></textarea>
+                        <div class="form-text">Setiap baris nama akan menghasilkan 1 helaian sijil PDF berasingan.</div>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg w-100 shadow" onclick="janaSijilPukal()">
+                        <i class="bi bi-file-earmark-pdf-fill"></i> Jana & Muat Turun PDF Pukal
+                    </button>
                 </div>
             </div>
-        </div>
-        
-        <div class="text-center mt-5">
-            <a href="laporan.html" class="btn btn-outline-light px-4 py-2 rounded-pill"><i class="bi bi-bar-chart-line"></i> Buka Analisis Kehadiran Semester</a>
+
+            <!-- Bahagian Pratinjau Reka Bentuk (Live Preview) -->
+            <div class="col-lg-7">
+                <div class="sticky-top" style="top: 20px;">
+                    <h4 class="mb-3"><i class="bi bi-eye"></i> Pratinjau Sijil (Live Preview)</h4>
+                    
+                    <!-- Sijil Preview Visual -->
+                    <div class="card card-custom p-3 d-flex justify-content-center align-items-center bg-secondary-subtle" style="overflow-x: auto;">
+                        <div class="sijil-container" id="sijilPreview">
+                            <div class="sijil-inner">
+                                <div class="sijil-logo">
+                                    <i class="bi bi-bookmark-star-fill"></i>
+                                </div>
+                                <div class="sijil-tajuk" id="previewJenis">Sijil Penghargaan</div>
+                                <div class="sijil-sub">Dengan ini dianugerahkan kepada</div>
+                                
+                                <div class="sijil-penerima" id="previewNama">NAMA PELAJAR DI SINI</div>
+                                
+                                <div class="sijil-ulasan">
+                                    di atas sumbangan, komitmen dan kecemerlangan yang telah ditunjukkan sepanjang menyertai <strong id="previewAcara">Program Peningkatan Prestasi Akademik 2026</strong>. Terima kasih atas usaha murni yang diberikan.
+                                </div>
+                                
+                                <div class="sijil-tandatangan">
+                                    <div class="sijil-nama-guru" id="previewGuru">Puan Aminah Binti Ahmad</div>
+                                    <div class="sijil-jawatan" id="previewJawatan">Pengetua Cemerlang</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- PANGGILAN LIBRARY FIREBASE SDK SEBELUM APP.JS -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Kontena tersembunyi untuk proses rendering PDF secara pukal -->
+    <div id="temp-output-container"></div>
 
-    <!-- PANGGILAN LOGIK UTAMA -->
     <script src="app.js"></script>
 </body>
 </html>
